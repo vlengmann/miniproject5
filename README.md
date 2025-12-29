@@ -109,14 +109,13 @@ Analyze groupings among exoplanets by applying hierachical clustering and k-mean
 ## Screenshots
 
 ### PCA Biplot
-<img width="633" height="368" alt="pca_biplot" src="https://github.com/user-attachments/assets/ee5101a4-f688-4457-94a1-292fd1305846" />
+<img width="633" height="368" alt="pca_biplot" src="https://github.com/user-attachments/assets/ee5101a4-f688-4457-94a1-292fd1305846" />  
 The PCA Biplot demostrates variation among two dimensions, where the first dimension showcases education, income and illiteracy and the second dimension captures differences between the state size and population.
 
-### Hierarchial Clustering (complete Linkage)
-<img width="548" height="296" alt="hca_dendogram_complete" src="https://github.com/user-attachments/assets/b11b2428-2532-4c13-ad9f-a726125b1348" />
+### Hierarchial Clustering (complete Linkage)  
+<img width="548" height="296" alt="hca_dendogram_complete" src="https://github.com/user-attachments/assets/b11b2428-2532-4c13-ad9f-a726125b1348" />  
 This dendogram shows seperation of orbital eccentricity and physical scale.
 
 ### Kmeans Clustering (K=3)
-<img width="562" height="356" alt="kmeans_planets" src="https://github.com/user-attachments/assets/be3800c3-1079-4524-bbfe-6875c8c5ff76" />
-
+<img width="562" height="356" alt="kmeans_planets" src="https://github.com/user-attachments/assets/be3800c3-1079-4524-bbfe-6875c8c5ff76" /> 
 K means clusters that show consistenct results as HCA results.
