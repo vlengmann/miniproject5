@@ -109,13 +109,22 @@ Analyze groupings among exoplanets by applying hierachical clustering and k-mean
 ## Screenshots
 
 ### PCA Biplot
-<img width="633" height="368" alt="pca_biplot" src="https://github.com/user-attachments/assets/ee5101a4-f688-4457-94a1-292fd1305846" />  
-The PCA Biplot demostrates variation among two dimensions, where the first dimension showcases education, income and illiteracy and the second dimension captures differences between the state size and population.
 
-### Hierarchial Clustering (complete Linkage)  
-<img width="548" height="296" alt="hca_dendogram_complete" src="https://github.com/user-attachments/assets/b11b2428-2532-4c13-ad9f-a726125b1348" />  
-This dendogram shows seperation of orbital eccentricity and physical scale.
+<img src="https://github.com/user-attachments/assets/ee5101a4-f688-4457-94a1-292fd1305846" width="633" />
 
-### Kmeans Clustering (K=3)
-<img width="562" height="356" alt="kmeans_planets" src="https://github.com/user-attachments/assets/be3800c3-1079-4524-bbfe-6875c8c5ff76" /> 
-K means clusters that show consistenct results as HCA results.
+*The PCA biplot demonstrates variation across two principal dimensions, where the first dimension reflects differences in education, income, and illiteracy, and the second dimension captures variation related to state size and population.*
+
+
+### Hierarchical Clustering (Complete Linkage)
+
+<img src="https://github.com/user-attachments/assets/b11b2428-2532-4c13-ad9f-a726125b1348" width="548" />
+
+*This dendrogram shows separation among observations driven primarily by differences in orbital eccentricity and physical scale.*
+
+### K-Means Clustering (K = 3)
+
+<img src="https://github.com/user-attachments/assets/be3800c3-1079-4524-bbfe-6875c8c5ff76" width="562" />
+
+*K-means clustering produces groupings consistent with the hierarchical clustering results, indicating stable and interpretable cluster structure.*
+
+
