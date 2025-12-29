@@ -5,6 +5,16 @@ This project showcases a broad knowledge of **data cleaning**, **unsupervised le
 
 The analysis includes **feature scaling**,**dimensionality reduction**, **clustering**,**regularization**, and **cross-validated model comparison**.
 
+## Project Timeline
+
+- **Original completion:** December 2020  
+- **GitHub upload:** 2025  
+
+This project was completed as part of earlier coursework and has been uploaded to GitHub for portfolio and documentation purposes.
+Visualizations were originally generated in December 2020 and re-exported for documentation and presentation.
+
+
+
 ## Datasets  
 
 
