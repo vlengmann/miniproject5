@@ -1,0 +1,365 @@
+---
+title: "Mini_Project_52_Solutions"
+author: "Vannessa Juarez"
+date: "2020 M11 12"
+output:
+  html_document:
+    df_print: paged
+
+
+
+```{r}
+#import the libraries
+library(factoextra)
+library(datasets)
+library(corrplot)
+library(caret)
+library(ISLR)
+library(psych)
+library(elasticnet)
+library(pls)
+```
+
+## `State` dataset from `datasets` in R
+
+```{r}
+#import the data and correctly label the columns
+state_data=as.data.frame(state.x77)
+attach(state_data)
+colnames(state_data)
+colnames(state_data)[4] <- "LifeExp"
+colnames(state_data)[6] <- "HsGrad"
+colnames(state_data)
+```
+
+### EDA
+
+Boxplots and histograms usually are plotted to show the distribution of the variables in the dataset. In order to access the normality of the data, a Histogram and boxplot of the variable are constructed and investigated. The boxplots and histograms plotted indicated slight skewness in the data that requires normalizing.
+
+```{r}
+#Exploring the data using histogram and boxplots
+par(mfrow=c(2,2))
+boxplot(state_data$Illiteracy  , col="blue" , xlab="Illiteracy ",main="Box plot of Illiteracy ", horizontal=TRUE)
+hist(state_data$Illiteracy ,col = rainbow(7),xlab="Life Exp ",main="A histogram of Life Exp ")
+boxplot(state_data$Area  , col="pink" , xlab="Area ",main="Box plot of Area ", horizontal=TRUE)
+hist(state_data$Area ,col = rainbow(10),xlab="Area ",main="A histogram of Area ")
+
+```
+
+
+```{r}
+par(mfrow=c(2,2))
+boxplot(state_data$Population  , col="blue" , xlab="Population ",main="Box plot of Population ", horizontal=TRUE)
+hist(state_data$Population ,col = rainbow(7),xlab="Population ",main="A histogram of Population ")
+boxplot(state_data$Income  , col="pink" , xlab="Income ",main="Box plot of Income ", horizontal=TRUE)
+hist(state_data$Income ,col = rainbow(10),xlab="Income ",main="A histogram of Income ")
+
+```
+
+
+```{r}
+par(mfrow=c(2,2))
+boxplot(state_data$LifeExp  , col="blue" , xlab="Life Exp ",main="Box plot of Life Exp ", horizontal=TRUE)
+hist(state_data$LifeExp ,col = rainbow(7),xlab="Life Exp ",main="A histogram of Life Exp ")
+boxplot(state_data$Murder  , col="pink" , xlab="Murder ",main="Box plot of Murder ", horizontal=TRUE)
+hist(state_data$Murder ,col = rainbow(10),xlab="Murder ",main="A histogram of Murder ")
+
+```
+
+The correlation matrix gives the correlation scores of the variables in the dataset. A positive correlation indicated that the two variables move in the same direction, while a negative correlation indicates that they move in the opposite direction. A higher correlation, usually above .5, is considered statistically significant, and it indicates the existence of a significant association in the data. For instance, HsGrad and Income have a higher positive correlation of above 0.5, while Illiteracy and murder have a higher negative correlation of above -.5.
+
+```{r}
+#correlation matrix of the data
+par(mfrow=c(1,1))
+#explicit call the package
+res <- cor(state_data)
+corrplot::corrplot(res, type = "upper", order = "hclust", 
+         tl.col = "black", tl.srt = 45)
+```
+Standardizing is recomended. Standardizing the variables would place the variables in a standard range that would facilitate analysis and probably reduce the number of extreme outliers.
+
+### PCA analysis
+```{r}
+#PACF analysis
+PACS <- prcomp(state_data, scale = TRUE)
+fviz_eig(PACS)
+```
+
+
+```{r}
+#Visualizing the clusters
+fviz_pca_ind(PACS,
+             col.ind = "cos2", # Color by the quality of representation
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE     # Avoid text overlapping
+)
+```
+
+
+```{r}
+#obtaining the clusters and score matrix
+PACS$rotation
+dim(PACS$x)
+head(PACS$x)
+```
+
+
+Focusing on the first two PCs:
+
+Explained variance in Principle component analysis give the variance accounted for by each fitted cluster. the larger the variance the significant the cluster is. Clusters that explain just a small variance can be dropped since they do not explain any significant variance in the data.
+
+```{r}
+#variance explained
+variance_explained <- PACS$sdev^2
+pve <- variance_explained/sum(variance_explained)
+pve
+cumsum(pve)
+```
+
+A possible of four clusters can be extracted from the data since ath the fouth cluster the variance explained does not change significantly. 
+
+```{r}
+plot(pve, xlab = "Principal Component", ylab = "Proportion of Variance Explained", ylim = c(0,1), type = 'b')
+
+plot(cumsum(pve), xlab = "Principal Component", ylab = "Cumulative Proportion of Variance Explained", ylim = c(0,1), type = 'b')
+
+```
+
+```{r}
+fviz_pca_biplot(PACS, repel = TRUE,
+                col.var = "#2E9FDF", # Variables color
+                col.ind = "#696969"  # Individuals color
+                )
+```
+
+
+## `College` data from the `ISLR` package
+Objective is to predict the number of applications received using the other variables, while all the data will be used as training data.
+
+```{r}
+#import the data
+college_data=as.data.frame(College)
+colnames(college_data)
+```
+
+### Fitting a linear model using LSR and report the LOOCV estimate of the test error
+
+The error rate of a fitted model is explained by the RMSE and MAE. the larges these scores are, the poor the model. the lower the MAE and RMSE score the better the model.
+
+```{r}
+#linear model using least squares
+model_lm=train(Enroll ~ ., method = "lm", data = college_data, trControl = trainControl(method = "LOOCV"))
+model_lm
+
+lm.pred <- predict(model_lm, s = bestlam, newx = as.matrix(college_data[,-4]))
+head(lm.pred)
+diffrence=(college_data[4] - as.data.frame(lm.pred))^2
+sqrt(mean(diffrence$Enroll))
+paste("The Estimated Test Error = ",sqrt(mean(diffrence$Enroll)))
+
+```
+
+### Fitting a ridge regression model with chosen lamda chosen by LOOCV
+
+```{r}
+#ridge regression model
+controls <- trainControl(method = "LOOCV")
+
+ridgeFit <- train(Enroll ~ ., data = college_data,method = 'ridge',
+                  preProc = c("center", "scale"),trControl = controls)
+ridgeFit
+
+ridge.pred <- predict(ridgeFit, s = bestlam, newx = as.matrix(college_data[,-4]))
+head(ridge.pred)
+diffrence=(college_data[4] - as.data.frame(ridge.pred))^2
+paste("The Estimated Test Error = ",sqrt(mean(diffrence$Enroll)))
+```
+
+### Fitting a lasso model with chosen lamda chosen by LOOCV
+
+```{r}
+#lasso model
+lasso_caret<- train(Enroll ~ ., data = college_data, method = "glmnet",
+                    trControl=controls,preProc = c("center","scale"),
+                    tuneGrid = expand.grid(alpha = 1,
+                                           lambda = 0))
+lasso_caret
+
+lasso.pred <- predict(lasso_caret, s = bestlam, newx = as.matrix(college_data[,-4]))
+head(lasso.pred)
+diffrence=(college_data[4] - as.data.frame(lasso.pred))^2
+paste("The Estimated Test Error = ",sqrt(mean(diffrence$Enroll)))
+
+```
+
+### Fitting a PCR model with M chosen by LOOCV
+
+```{r}
+#PCR model
+model_pcr <- train(
+  Enroll~., data = college_data, method = "pcr",
+  scale = TRUE,
+  trControl = controls,
+  tuneLength = 10
+)
+model_pcr
+
+pcr.pred <- predict(model_pcr, s = bestlam, newx = as.matrix(college_dhata[,-4]))
+head(pcr.pred)
+diffrence=(college_data[4] - as.data.frame(pcr.pred))^2
+paste("The Estimated Test Error = ",sqrt(mean(diffrence$Enroll)))
+```
+
+### Fitting a PLS model with M chosen by LOOCV
+
+```{r}
+#PLS model
+model_pls <- train(
+  Enroll~., data = college_data, method = "pls",
+  scale = TRUE,
+  trControl = controls,
+  tuneLength = 10
+)
+model_pls
+
+pls.pred <- predict(model_pls, s = bestlam, newx = as.matrix(college_data[,-4]))
+head(pls.pred)
+diffrence=(college_data[4] - as.data.frame(pls.pred))^2
+paste("The Estimated Test Error = ",sqrt(mean(diffrence$Enroll)))
+```
+
+
+### Comparing results from all models
+
+Partial least square model. has a higher R square value and the least MAE of 112.54 and RMSE of 215.79
+
+## Planet data set
+This dataset gives values of three features for 101 exoplanets discovered up to OCt 2002. The objective of this study is to cluster the exoplanets on the basis of these features.
+
+You may read about them at https://en.wikipedia.org/wiki/Exoplanet. The
+features recorded are — Mass (in Jupiter mass), Period (in Earth days), and Eccentricity.
+```{r}
+#import the data
+data=read.csv(file = "C:/Users/Owner/Documents/Rstudio/planet1.csv", header=T)
+head(data)
+describe(data, skew = F)
+attach(data)
+```
+
+### EDA- Univariate and Bivariate
+
+```{r}
+#Exploratory data analysis
+par(mfrow=c(1,1))
+res1 <- cor(data)
+res1
+corrplot::corrplot(res1, type = "upper", order = "hclust", 
+         tl.col = "black", tl.srt = 45)
+```
+
+
+```{r}
+describe(data$Period, skew = F)
+par(mfrow=c(1,2))
+boxplot(data$Period  , col="pink" , xlab="Period ",main="Box plot of Period ", horizontal=TRUE)
+hist(data$Period ,col = rainbow(10),xlab="Period ",main="A histogram of Period ")
+
+```
+
+Exploratory data analysis on the variables Period indicates that the variable is positively skewed. The variable has a mean of 66.53, a standard deviation of 873.75, a maximum of 5360 and a minimum of 2.98.
+
+
+```{r}
+describe(data$Eccentricity)
+describe(data$Mass)
+par(mfrow=c(2,2))
+boxplot(data$Eccentricity  , col="blue" , xlab="Eccentricity ",main="Box plot of Eccentricity ", horizontal=TRUE)
+hist(data$Eccentricity ,col = rainbow(7),xlab="Eccentricity ",main="A histogram of Eccentricity ")
+boxplot(data$Mass  , col="pink" , xlab="Mass ",main="Box plot of Mass ", horizontal=TRUE)
+hist(data$Mass ,col = rainbow(10),xlab="Mass ",main="A histogram of Mass ")
+
+```
+
+Both the variables Mass and Eccentricity exhibits positive skewness as indicated by the histograms and the boxplots. The Eccentricity variables has a mean of of 0.28 and a standard deviation of 0.21. The Mass variable has a mean of 3.33 and a standard deviation of 3.68
+
+### Is standardizing effective?
+
+Yes. standardizing the variables would normalize the data. additionally standardizing the data is useful to attain internal consistency of the data to have the same content and format. The data set have units that have different variables with different units, thus standardizing the data is essential. Standardizing is essential when we analyze using distance based methods.
+
+### Standardizationusing complete linkage and Euclidean distance
+
+Metric based distance since the variables in the data do not have high correlations. Correlation based distance assumes that the highly correlated variables to be same in distance. 
+
+### Summarize the cluster specific means
+
+```{r}
+#scaling the data
+data=as.data.frame(scale(data))
+
+hc.single <- hclust(dist(data), method = "single")
+hc.complete <- hclust(dist(data), method = "complete")
+hc.average <- hclust(dist(data), method = "average")
+```
+
+
+A dendrogram is a diagram that shows the hierarchical relationship between objects. 
+
+```{r}
+#plotting the dendograms
+par(mfrow = c(1, 2))
+plot(hc.complete, main = "Complete Linkage", xlab = "", sub = "", 
+     cex = 0.7)
+
+```
+
+
+```{r}
+plot(hc.average, main = "Euclidean distance.", xlab = "", sub = "", cex = 0.7)
+
+```
+
+
+
+```{r}
+cutree(hc.complete, 3)
+cutree(hc.average, 3)
+
+xsc <- scale(data)
+xsc.hc.complete <- hclust(dist(xsc), method = "complete")
+cutree(xsc.hc.complete, 3)
+plot(xsc.hc.complete, main = "Hierarchical Clustering with Scaled Features", xlab = "", sub = "", cex = 0.7)
+
+```
+
+```{r}
+pairs(data, pch=2, col="green")
+```
+
+
+```{r}
+sub_grp <- cutree(hc.complete, k = 3)
+fviz_cluster(list(data = data, cluster = sub_grp))
+```
+
+
+### Using K means clustering with K=3, repeat process and compare conclusions
+
+K-mean clustering is a technique used to partition a large dataset of n by n or n by m dimension into a small dimension by clustering the data variables into clusters. Observation in the data belongs to the cluster with the nearest mean.
+
+
+```{r}
+k_clusters <- kmeans(data, 3, nstart = 20)
+k_clusters
+
+k_clusters$cluster
+
+```
+
+
+```{r}
+plot(data, col = (k_clusters$cluster + 1), main = "K-Means Clustering Results with K=3", pch = 20, cex = 2)
+
+```
+
+K means clustering suggests a possible three clusters while hierarchical clustering suggests a possible two clusters.
+HCA produces tighter more conservative clusters whereas the kmeans clusters accurately summarize the main groupings.
